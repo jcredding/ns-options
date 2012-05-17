@@ -1,6 +1,29 @@
+require 'backports'
+require 'virtus'
+
 module NsOptions
 
   class Namespace
+    include Virtus
+
+    class << self
+      alias_method :option, :attribute
+      undef_method :attribute
+      
+      def build(&block)
+        Class.new(self).define(&block)
+      end
+
+      def define(&block)
+        if block && block.arity > 0
+          yield self
+        elsif block
+          self.instance_eval(&block)
+        end
+        self
+      end
+    end
+=begin
     attr_accessor :options, :metaclass
 
     # Every namespace tracks a metaclass to allow for individual reader/writers for their options,
@@ -92,7 +115,7 @@ module NsOptions
     def each
       self.to_hash.each { |k,v| yield k,v if block_given? }
     end
-
+=end
     # The define method is provided for convenience and commonization. The internal system
     # uses it to commonly use a block with a namespace. The method can be used externally when
     # a namespace is created separately from where options are added/set on it. For example:
@@ -105,15 +128,8 @@ module NsOptions
     #
     # Will define a new namespace under the parent namespace and then will later on add options to
     # it.
-    def define(&block)
-      if block && block.arity > 0
-        yield self
-      elsif block
-        self.instance_eval(&block)
-      end
-      self
-    end
 
+=begin
     # There are a number of cases we want to watch for:
     # 1. A reader of a 'known' option. This case is for an option that's been defined for an
     #    ancestor of this namespace but not directly for this namespace. In this case we fetch
@@ -152,7 +168,7 @@ module NsOptions
     def inspect(*args)
       "#<#{self.class}:#{'0x%x' % (self.object_id << 1)}:#{self.options.key} #{self.to_hash.inspect}>"
     end
-
+=end
   end
 
 end

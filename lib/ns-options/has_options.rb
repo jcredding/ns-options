@@ -29,13 +29,12 @@ module NsOptions
       # the namespaces at the instance level still get all the defined options, but are completely
       # separate objects from the class and other instances. Modules only deal with a single
       # namespace at the module level.
-      def options(name, key = nil, &block)
+      def options(name, &block)
         NsOptions::Helper.advisor.is_this_namespace_ok?(name, caller)
-        key ||= name.to_s
         method_definitions = <<-CLASS_METHOD
 
           def self.#{name}(&block)
-            @#{name} ||= NsOptions::Namespace.new('#{key}', &block)
+            @#{name} ||= NsOptions::Namespace.build(&block)
           end
 
         CLASS_METHOD
@@ -44,7 +43,7 @@ module NsOptions
 
             def #{name}(&block)
               unless @#{name}
-                @#{name} = NsOptions::Namespace.new('#{key}', &block)
+                @#{name} = NsOptions::Namespace.build(&block)
                 @#{name}.options.build_from(self.class.#{name}.options, @#{name})
               end
               @#{name}
